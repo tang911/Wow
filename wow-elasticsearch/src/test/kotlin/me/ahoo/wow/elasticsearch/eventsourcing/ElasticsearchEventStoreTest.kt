@@ -13,18 +13,12 @@
 
 package me.ahoo.wow.elasticsearch.eventsourcing
 
-import co.elastic.clients.transport.rest_client.RestClientTransport
+import me.ahoo.wow.elasticsearch.ReactiveElasticsearchClients
 import me.ahoo.wow.elasticsearch.TemplateInitializer.initEventStreamTemplate
-import me.ahoo.wow.elasticsearch.WowJsonpMapper
 import me.ahoo.wow.eventsourcing.EventStore
 import me.ahoo.wow.tck.container.ElasticsearchLauncher
-import me.ahoo.wow.tck.container.ElasticsearchLauncher.ELASTIC_PWD
 import me.ahoo.wow.tck.eventsourcing.EventStoreSpec
 import org.junit.jupiter.api.BeforeAll
-import org.springframework.data.elasticsearch.client.ClientConfiguration
-import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients
-import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient
-import java.time.Duration
 
 class ElasticsearchEventStoreTest : EventStoreSpec() {
     companion object {
@@ -36,24 +30,12 @@ class ElasticsearchEventStoreTest : EventStoreSpec() {
     }
 
     override fun createEventStore(): EventStore {
-        val clientConfiguration = ClientConfiguration.builder()
-            .connectedTo(ElasticsearchLauncher.ELASTICSEARCH_CONTAINER.httpHostAddress)
-            .usingSsl(ElasticsearchLauncher.ELASTICSEARCH_CONTAINER.createSslContextFromCa())
-            .withBasicAuth("elastic", ELASTIC_PWD)
-            .withSocketTimeout(Duration.ofSeconds(30))
-            .withConnectTimeout(Duration.ofSeconds(5))
-            .build()
-        val restClient = ElasticsearchClients.getRestClient(clientConfiguration)
-        val transport = RestClientTransport(restClient, WowJsonpMapper)
-        val elasticsearchClient = ReactiveElasticsearchClient(transport)
+        val elasticsearchClient = ReactiveElasticsearchClients.createReactiveElasticsearchClient()
         elasticsearchClient.initEventStreamTemplate()
         return ElasticsearchEventStore(
-            elasticsearchClient = elasticsearchClient
+            elasticsearchClient = elasticsearchClient,
         )
     }
 
-    /**
-     * TODO
-     */
     override fun appendEventStreamWhenDuplicateRequestIdException() = Unit
 }

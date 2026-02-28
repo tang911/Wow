@@ -13,9 +13,8 @@
 
 package me.ahoo.wow.elasticsearch.query.snapshot
 
-import co.elastic.clients.transport.rest_client.RestClientTransport
+import me.ahoo.wow.elasticsearch.ReactiveElasticsearchClients
 import me.ahoo.wow.elasticsearch.TemplateInitializer.initSnapshotTemplate
-import me.ahoo.wow.elasticsearch.WowJsonpMapper
 import me.ahoo.wow.elasticsearch.eventsourcing.ElasticsearchSnapshotRepository
 import me.ahoo.wow.eventsourcing.snapshot.SnapshotRepository
 import me.ahoo.wow.query.snapshot.SnapshotQueryServiceFactory
@@ -23,8 +22,6 @@ import me.ahoo.wow.tck.container.ElasticsearchLauncher
 import me.ahoo.wow.tck.query.SnapshotQueryServiceSpec
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.springframework.data.elasticsearch.client.ClientConfiguration
-import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient
 
 class ElasticsearchSnapshotQueryServiceTest : SnapshotQueryServiceSpec() {
@@ -40,14 +37,7 @@ class ElasticsearchSnapshotQueryServiceTest : SnapshotQueryServiceSpec() {
 
     @BeforeEach
     override fun setup() {
-        val clientConfiguration = ClientConfiguration.builder()
-            .connectedTo(ElasticsearchLauncher.ELASTICSEARCH_CONTAINER.httpHostAddress)
-            .usingSsl(ElasticsearchLauncher.ELASTICSEARCH_CONTAINER.createSslContextFromCa())
-            .withBasicAuth("elastic", ElasticsearchLauncher.ELASTIC_PWD)
-            .build()
-        val restClient = ElasticsearchClients.getRestClient(clientConfiguration)
-        val transport = RestClientTransport(restClient, WowJsonpMapper)
-        elasticsearchClient = ReactiveElasticsearchClient(transport)
+        elasticsearchClient = ReactiveElasticsearchClients.createReactiveElasticsearchClient()
         elasticsearchClient.initSnapshotTemplate()
         super.setup()
     }
